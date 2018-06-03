@@ -8,12 +8,13 @@
  *
  * @author gabriel
  */
-public class Process {
+public class Process implements Comparable<Process> {
     private Integer pid;
     private Integer priority;
     private Integer totalTime;
     private Integer remainingTime;
     private Integer insertionTime;
+    private Boolean running;
     private Boolean finished;
 
     public Process(Integer pid, Integer priority, Integer totalTime, Integer currentTime) {
@@ -21,6 +22,7 @@ public class Process {
         this.priority = priority;
         this.totalTime = totalTime;
         this.remainingTime = totalTime;
+        this.running = false;
         this.finished = false;
         this.insertionTime = currentTime;
     }
@@ -58,14 +60,35 @@ public class Process {
     }
     
     public void runProcess(){
+    	
+    	running = true;
+    	
         if(remainingTime > 0){
             remainingTime--;
         }
         
-        finished = remainingTime == 0;
+        if (remainingTime == 0) {
+        	System.out.println("Finished proccess PID = " + this.getPid());
+        	running = false;
+        	finished = true;
+        }
     }
         
     public Boolean isFinished(){
         return finished;
     }
+
+	@Override
+	public int compareTo(Process o) {
+		
+        //System.out.println("Comparing PID " + this.getPid() + " with PID " + o.getPid());
+
+        if (this.priority > o.getPriority()) {
+            return 1;
+        } else if (this.priority < o.getPriority()) {
+            return -1;
+        }
+
+        return 0;
+	}
 }

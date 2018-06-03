@@ -1,6 +1,5 @@
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.PriorityQueue;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -13,9 +12,12 @@ import java.util.List;
  * @author gabriel
  */
 public class Scheduler extends Thread{
-    List<Process> processes = new ArrayList<Process>();
+	PriorityQueue<Process> processes = new PriorityQueue<Process>();
+	PriorityQueue<Process> expiredProcesses = new PriorityQueue<Process>();
     private Boolean running = true;
+    private Boolean usingQuantum = false;
     private Integer quantum = 0;
+    private Integer remainingQtime = 0;
     private Process runningProcess;
     private Integer nextPid = 0;
     private Integer currentTime = 0;
@@ -23,6 +25,7 @@ public class Scheduler extends Thread{
     public void addProcess(Process p){
         processes.add(p);
         updateCounter();
+        System.out.println("Added new process with PID: " + p.getPid() + " time: " + p.getTotalTime() + " priority: " + p.getPriority());
     }
     
     public Integer getCurrentTime(){
@@ -54,14 +57,27 @@ public class Scheduler extends Thread{
                     for(Process p:processes){
                         if(!p.isFinished()){
                             runningProcess = p;
+                        	System.out.println("Running proccess PID = " + runningProcess.getPid() + " with remainingTime = " + runningProcess.getRemainingTime());
+                            if (quantum > 0 ) {
+                            	usingQuantum = true;
+                                remainingQtime = quantum;
+                            } else {
+                            	usingQuantum = false;
+                            }
                             break;
                         }
                     }
                 }
                 
                 if(runningProcess == null){
-                    SISOPInterface.outputTextArea.setText("IDLE!");
-                }else{
+                    if (usingQuantum && !expiredProcesses.isEmpty()) {
+                    	System.out.println("Finished all active processes. Retrieving expired processes.");
+                    	processes.addAll(expiredProcesses);
+                    	expiredProcesses.removeAll(expiredProcesses);
+                    } else {
+                        SISOPInterface.outputTextArea.setText("IDLE!");
+                    }
+                } else {
                     SISOPInterface.outputTextArea
                             .setText("RUNNING PROCESS PID = " 
                             + runningProcess.getPid());
@@ -75,11 +91,20 @@ public class Scheduler extends Thread{
                     
                     SISOPInterface.outputTextArea.append("REMAINING TIME = " 
                             + runningProcess.getRemainingTime());
-                    
                     runningProcess.runProcess();
-                    if(runningProcess.isFinished()){
-                        processes.remove(runningProcess);
-                        runningProcess = null;                        
+                    if (usingQuantum) {
+                        remainingQtime--;
+                        if(remainingQtime == 0 || runningProcess.isFinished()){
+                            if (!runningProcess.isFinished()) expiredProcesses.add(runningProcess);
+                            processes.remove(runningProcess);
+                            runningProcess = null;                        
+                        }
+                    	
+                    } else {
+                        if(runningProcess.isFinished()){
+                            processes.remove(runningProcess);
+                            runningProcess = null;                        
+                        }
                     }
                 }
                 
