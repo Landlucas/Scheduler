@@ -14,17 +14,19 @@ public class Process implements Comparable<Process> {
     private Integer totalTime;
     private Integer remainingTime;
     private Integer insertionTime;
-    private Boolean running;
+    private Integer quantumSlices;
     private Boolean finished;
+	private double avgTime;
 
     public Process(Integer pid, Integer priority, Integer totalTime, Integer currentTime) {
         this.pid = pid;
         this.priority = priority;
         this.totalTime = totalTime;
         this.remainingTime = totalTime;
-        this.running = false;
         this.finished = false;
         this.insertionTime = currentTime;
+        this.quantumSlices = 0;
+        this.avgTime = 0;
     }
 
     /**
@@ -54,28 +56,40 @@ public class Process implements Comparable<Process> {
     public Integer getRemainingTime() {
         return remainingTime;
     }
-    
+
+    /**
+     * @return the insertionTime
+     */
     public Integer getInsertionTime(){
         return insertionTime;
     }
     
-    public void runProcess(){
-    	
-    	running = true;
+    public void setInsertionTime(Integer insertionTime) {
+		this.insertionTime = insertionTime;
+	}
+    
+    public double getAvgTime() {
+    	return avgTime;
+    }
+
+	public void runProcess(){
     	
         if(remainingTime > 0){
             remainingTime--;
         }
         
         if (remainingTime == 0) {
-        	System.out.println("Finished proccess PID = " + this.getPid());
-        	running = false;
         	finished = true;
         }
     }
-        
-    public Boolean isFinished(){
+
+	public Boolean isFinished(){
         return finished;
+    }
+    
+    public void recalcAvgWait(Integer currentTime) {
+    	this.quantumSlices++;
+    	this.avgTime = (avgTime + (currentTime - insertionTime)) / quantumSlices;
     }
 
 	@Override

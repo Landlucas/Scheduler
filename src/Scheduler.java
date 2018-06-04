@@ -21,6 +21,8 @@ public class Scheduler extends Thread{
     private Process runningProcess;
     private Integer nextPid = 0;
     private Integer currentTime = 0;
+	private Integer numFinishedProcesses = 0;
+	private double avgWaitTime = 0;
     
     public void addProcess(Process p){
         processes.add(p);
@@ -49,6 +51,15 @@ public class Scheduler extends Thread{
         return nextPid++;
     }
     
+    public double getAvgWaitTime() {
+		return avgWaitTime;
+	}
+
+	public void recalcAvgWait(double newWaitTime) {
+    	this.numFinishedProcesses++;
+    	this.avgWaitTime = (avgWaitTime + newWaitTime) / numFinishedProcesses;
+    }
+    
     @Override
     public void run() {
         while(running){
@@ -64,6 +75,7 @@ public class Scheduler extends Thread{
                             } else {
                             	usingQuantum = false;
                             }
+                            runningProcess.recalcAvgWait(currentTime);
                             break;
                         }
                     }
@@ -76,6 +88,9 @@ public class Scheduler extends Thread{
                     	expiredProcesses.removeAll(expiredProcesses);
                     } else {
                         SISOPInterface.outputTextArea.setText("IDLE!");
+                        SISOPInterface.outputTextArea.append("\n");
+                        SISOPInterface.outputTextArea.append("AVG WAIT TIME = " 
+                                + this.getAvgWaitTime());
                     }
                 } else {
                     SISOPInterface.outputTextArea
@@ -95,14 +110,23 @@ public class Scheduler extends Thread{
                     if (usingQuantum) {
                         remainingQtime--;
                         if(remainingQtime == 0 || runningProcess.isFinished()){
-                            if (!runningProcess.isFinished()) expiredProcesses.add(runningProcess);
+                            if (!runningProcess.isFinished()) {
+                            	expiredProcesses.add(runningProcess);
+                                runningProcess.setInsertionTime(currentTime);
+                            	System.out.println("Finished proccess PID = " + runningProcess.getPid() + " with avg wait time = " + runningProcess.getAvgTime());
+                            } else {
+                            	
+                            }
                             processes.remove(runningProcess);
+                            recalcAvgWait(runningProcess.getAvgTime());
                             runningProcess = null;                        
                         }
                     	
                     } else {
                         if(runningProcess.isFinished()){
+                        	System.out.println("Finished proccess PID = " + runningProcess.getPid() + " with avg wait time = " + runningProcess.getAvgTime());
                             processes.remove(runningProcess);
+                            recalcAvgWait(runningProcess.getAvgTime());
                             runningProcess = null;                        
                         }
                     }
