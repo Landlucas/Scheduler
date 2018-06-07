@@ -1,4 +1,5 @@
 
+import java.text.DecimalFormat;
 import java.util.PriorityQueue;
 
 /*
@@ -56,8 +57,9 @@ public class Scheduler extends Thread{
 	}
 
 	public void recalcAvgWait(double newWaitTime) {
+		double currentSum = avgWaitTime * numFinishedProcesses;
     	this.numFinishedProcesses++;
-    	this.avgWaitTime = (avgWaitTime + newWaitTime) / numFinishedProcesses;
+    	this.avgWaitTime = (currentSum + newWaitTime) / numFinishedProcesses;
     }
     
     @Override
@@ -89,8 +91,9 @@ public class Scheduler extends Thread{
                     } else {
                         SISOPInterface.outputTextArea.setText("IDLE!");
                         SISOPInterface.outputTextArea.append("\n");
+                        DecimalFormat df = new DecimalFormat("#.##"); 
                         SISOPInterface.outputTextArea.append("AVG WAIT TIME = " 
-                                + this.getAvgWaitTime());
+                                + df.format(this.getAvgWaitTime()));
                     }
                 } else {
                     SISOPInterface.outputTextArea
@@ -113,9 +116,9 @@ public class Scheduler extends Thread{
                             if (!runningProcess.isFinished()) {
                             	expiredProcesses.add(runningProcess);
                                 runningProcess.setInsertionTime(currentTime);
-                            	System.out.println("Finished proccess PID = " + runningProcess.getPid() + " with avg wait time = " + runningProcess.getAvgTime());
+                            	System.out.println("Expired proccess PID = " + runningProcess.getPid());
                             } else {
-                            	
+                            	System.out.println("Finished proccess PID = " + runningProcess.getPid() + " with avg wait time = " + runningProcess.getAvgTime());
                             }
                             processes.remove(runningProcess);
                             recalcAvgWait(runningProcess.getAvgTime());
@@ -124,7 +127,7 @@ public class Scheduler extends Thread{
                     	
                     } else {
                         if(runningProcess.isFinished()){
-                        	System.out.println("Finished proccess PID = " + runningProcess.getPid() + " with avg wait time = " + runningProcess.getAvgTime());
+                        	System.out.println("Finished proccess PID = " + runningProcess.getPid() + " with wait time = " + runningProcess.getAvgTime());
                             processes.remove(runningProcess);
                             recalcAvgWait(runningProcess.getAvgTime());
                             runningProcess = null;                        

@@ -88,14 +88,16 @@ public class Process implements Comparable<Process> {
     }
     
     public void recalcAvgWait(Integer currentTime) {
+    	double currentSum = 0;
+    	if (quantumSlices > 0) {
+    		currentSum = avgTime * quantumSlices;
+    	}
     	this.quantumSlices++;
-    	this.avgTime = (avgTime + (currentTime - insertionTime)) / quantumSlices;
+    	this.avgTime = (currentSum + (currentTime - insertionTime)) / quantumSlices;
     }
 
 	@Override
 	public int compareTo(Process o) {
-		
-        //System.out.println("Comparing PID " + this.getPid() + " with PID " + o.getPid());
 
         if (this.priority > o.getPriority()) {
             return 1;
