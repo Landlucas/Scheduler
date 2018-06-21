@@ -24,9 +24,11 @@ public class Scheduler extends Thread{
     private Integer currentTime = 0;
 	private Integer numFinishedProcesses = 0;
 	private double avgWaitTime = 0;
+    private Integer currentPriority = 1;
     
     public void addProcess(Process p){
         processes.add(p);
+        if (usingQuantum && currentPriority > p.getPriority()) currentPriority = p.getPriority();
         updateCounter();
         System.out.println("Added new process with PID: " + p.getPid() + " time: " + p.getTotalTime() + " priority: " + p.getPriority());
     }
@@ -61,6 +63,18 @@ public class Scheduler extends Thread{
     	this.numFinishedProcesses++;
     	this.avgWaitTime = (currentSum + newWaitTime) / numFinishedProcesses;
     }
+
+	public void retrieveExpired() {
+    	processes.addAll(expiredProcesses);
+    	expiredProcesses.removeAll(expiredProcesses);
+        for(Process p:processes){
+            if(!p.isFinished()){
+                runningProcess = p;
+            	currentPriority = p.getPriority();
+                break;
+            }
+        }
+    }
     
     @Override
     public void run() {
@@ -70,7 +84,11 @@ public class Scheduler extends Thread{
                     for(Process p:processes){
                         if(!p.isFinished()){
                             runningProcess = p;
-                        	System.out.println("Running proccess PID = " + runningProcess.getPid() + " with remainingTime = " + runningProcess.getRemainingTime());
+                            if (usingQuantum && currentPriority != runningProcess.getPriority() ) {
+                            	System.out.println("Retrieving expired processes for potential process with more priority.");
+                            	retrieveExpired();
+                            }
+                        	System.out.println("Running proccess PID = " + runningProcess.getPid() + " priority = " + runningProcess.getPriority() + " remainingTime = " + runningProcess.getRemainingTime());
                             if (quantum > 0 ) {
                             	usingQuantum = true;
                                 remainingQtime = quantum;
