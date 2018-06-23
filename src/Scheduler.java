@@ -28,9 +28,13 @@ public class Scheduler extends Thread{
     
     public void addProcess(Process p){
         processes.add(p);
-        if (usingQuantum && currentPriority > p.getPriority()) currentPriority = p.getPriority();
         updateCounter();
         System.out.println("Added new process with PID: " + p.getPid() + " time: " + p.getTotalTime() + " priority: " + p.getPriority());
+        if (currentPriority > p.getPriority()) {
+        	currentPriority = p.getPriority();
+        	System.out.println("New proccess has higher priority.");
+            runningProcess = null;            
+        }
     }
     
     public Integer getCurrentTime(){
@@ -93,6 +97,7 @@ public class Scheduler extends Thread{
                             	usingQuantum = true;
                                 remainingQtime = quantum;
                             } else {
+                            	currentPriority = p.getPriority();
                             	usingQuantum = false;
                             }
                             runningProcess.recalcAvgWait(currentTime);
